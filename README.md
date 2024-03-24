@@ -14,7 +14,7 @@ cargo add leptos_lucide
 Alternatively, add the following line to your `Cargo.toml`:
 
 ```
-leptos_lucide = "0.1.0"
+leptos_lucide = "0.1.1"
 ```
 
 
