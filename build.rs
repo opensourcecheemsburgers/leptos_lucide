@@ -1,6 +1,8 @@
 #![feature(let_chains)]
 
+use core::panic;
 use std::{
+	fs::ReadDir,
 	path::{Path, PathBuf},
 	rc::Rc,
 };
@@ -17,6 +19,12 @@ struct LucideSvgFile {
 	contents: Rc<str>,
 }
 
+impl LucideSvgFile {
+	fn new(pascal_name: Rc<str>, snake_name: Rc<str>, contents: Rc<str>) -> Self {
+		Self { pascal_name, snake_name, contents }
+	}
+}
+
 #[derive(Clone)]
 struct LucideComponent {
 	mod_entry: Rc<str>,
@@ -24,48 +32,27 @@ struct LucideComponent {
 	component_file_path: Rc<str>,
 }
 
-impl LucideSvgFile {
-	fn new(pascal_name: Rc<str>, snake_name: Rc<str>, contents: Rc<str>) -> Self {
-		Self { pascal_name, snake_name, contents }
+impl LucideComponent {
+	fn new(
+		mod_entry: Rc<str>,
+		component_file_contents: Rc<str>,
+		component_file_path: Rc<str>,
+	) -> Self {
+		Self { mod_entry, component_file_contents, component_file_path }
 	}
 }
 
 fn main() -> Result<(), Error> {
-	let files = fetch_lucide_svg_files()?;
-	let components = create_lucide_components(files)?;
-
-	write_lucide_mod_file(&components);
-	write_lucide_component_files(&components);
-
-	// let mut icons_mod_file =
-	// File::create("src/icons/mod.rs").expect("Error creating icons mod file");
-
-	// let mut mod_entries = Vec::new();
-
-	// icons_dir.for_each(|dir_entry| {
-	// 	if let Ok(dir_entry) = dir_entry
-	// 		&& let Some(Ok(file_type)) = dir_entry.file_type()
-	// 	{
-	// 		let file = File::open(dir_entry.path()).expect("Not a file");
-	// 		let contents = read_to_string(file).expect("Not a text file.");
-	// 		let path = parse_rust_path_from_dir_entry(&dir_entry);
-
-	// 		let mut lucide_file = LucideFile::new(
-	// 			to_pascal_case(&dir_entry),
-	// 			to_snake_case(&dir_entry),
-	// 			contents,
-	// 			path,
-	// 		);
-
-	// 		add_mod_entry(&mut mod_entries, &mut lucide_file);
-	// 		kill_parent(&mut lucide_file);
-	// 		create_icon_from_template(&mut lucide_file);
-	// 		write_icon_to_fs(&mut lucide_file);
-	// 	}
-	// });
-
-	// icons_mod_file.write(mod_entries.concat().as_bytes()).expect("Cannot write mod file.");
-	Ok(())
+	match Path::new("src/icons/dog.rs").exists() {
+		true => Ok(()),
+		false => {
+			let files = fetch_lucide_svg_files()?;
+			let components = create_lucide_components(files)?;
+			write_lucide_mod_file(&components)?;
+			write_lucide_component_files(&components)?;
+			Ok(())
+		}
+	}
 }
 
 fn fetch_lucide_svg_files() -> Result<Vec<LucideSvgFile>, Error> {
@@ -101,11 +88,8 @@ fn lucide_svg_file_from_path(path: &PathBuf) -> Result<LucideSvgFile, Error> {
 	let pascal_name = to_pascal_case(file_name.clone());
 	let snake_name = to_snake_case(file_name);
 
-	let lucide_file = LucideSvgFile {
-		pascal_name: Rc::from(pascal_name),
-		snake_name: Rc::from(snake_name),
-		contents: Rc::from(contents),
-	};
+	let lucide_file =
+		LucideSvgFile::new(Rc::from(pascal_name), Rc::from(snake_name), Rc::from(contents));
 	Ok(lucide_file)
 }
 
@@ -161,11 +145,11 @@ fn lucide_file_to_component(lucide_file: LucideSvgFile) -> Result<LucideComponen
 	let component_file_path = create_component_file_path(&lucide_file);
 	let component_file_contents = create_component_file(&lucide_file);
 
-	let lucide_component = LucideComponent {
-		mod_entry: Rc::from(mod_entry),
-		component_file_contents: Rc::from(component_file_contents),
-		component_file_path: Rc::from(component_file_path),
-	};
+	let lucide_component = LucideComponent::new(
+		Rc::from(mod_entry),
+		Rc::from(component_file_contents),
+		Rc::from(component_file_path),
+	);
 	Ok(lucide_component)
 }
 
@@ -242,7 +226,8 @@ fn write_lucide_component_files(lucide_components: &Vec<LucideComponent>) -> Res
 		std::fs::write(
 			component.component_file_path.to_string(),
 			component.component_file_contents.to_string(),
-		);
+		)
+		.expect("Couldn't write lucide component file.");
 	});
 	Ok(())
 }
