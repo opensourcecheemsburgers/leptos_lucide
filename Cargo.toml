@@ -1,0 +1,35 @@
+[package]
+name = "leptos_lucide"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+authors = ["Stephen Power"]
+publish = true
+readme = "README.md"
+license = "AGPL-3.0"
+description = "Lucide icons in Leptos."
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = "fat"
+opt-level = "z"
+strip = true
+
+[profile.dev]
+opt-level = 0
+codegen-units = 256
+lto = "off"
+panic = "abort"
+
+[dependencies]
+leptos = "0.6.9"
+leptos_dom = "0.6.9"
+
+[build-dependencies]
+leptos = "0.6.9"
+leptos_dom = "0.6.9"
+anyhow = "1.0.81"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.42"
