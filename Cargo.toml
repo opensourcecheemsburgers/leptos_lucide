@@ -8,6 +8,7 @@ publish = true
 readme = "README.md"
 license = "AGPL-3.0"
 description = "Lucide icons in Leptos."
+repository = "https://github.com/opensourcecheemsburgers/leptos_lucide"
 
 [profile.release]
 panic = "abort"
